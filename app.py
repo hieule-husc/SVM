@@ -21,39 +21,184 @@ st.set_page_config(
 )
 
 # =====================================================
-# CSS
+# CUSTOM CSS
 # =====================================================
+
 st.markdown("""
-<div class="header-container">
+<style>
 
-<h1 style="
-text-align:center;
-font-size:60px;
-font-weight:900;
-color:white;
-margin-bottom:5px;
-">
-🤖 SVM Explorer
-</h1>
+/* ========= GLOBAL ========= */
 
-<p style="
-text-align:center;
-font-size:24px;
-color:#F8FAFC;
-font-weight:500;
-">
-Support Vector Machine for Breast Cancer Classification
-</p>
+.block-container{
+    padding-top:1rem;
+    padding-bottom:1rem;
+    max-width:1400px;
+}
 
-<p style="
-text-align:center;
-color:#CBD5E1;
-font-size:16px;
-">
-Machine Learning • Data Science • Classification
-</p>
+/* ========= HEADER ========= */
 
-</div>
+.header-container{
+
+    padding:30px;
+
+    border-radius:20px;
+
+    margin-bottom:20px;
+
+    background:linear-gradient(
+        135deg,
+        rgba(37,99,235,0.12),
+        rgba(59,130,246,0.03)
+    );
+
+    border:1px solid rgba(128,128,128,0.15);
+}
+
+.header-title{
+
+    text-align:center;
+
+    font-size:50px;
+
+    font-weight:800;
+
+    margin-bottom:10px;
+
+    color:inherit;
+}
+
+.header-subtitle{
+
+    text-align:center;
+
+    font-size:22px;
+
+    font-weight:500;
+
+    color:inherit;
+
+    opacity:0.9;
+}
+
+.header-desc{
+
+    text-align:center;
+
+    font-size:15px;
+
+    color:inherit;
+
+    opacity:0.7;
+
+    margin-top:10px;
+}
+
+/* ========= KPI ========= */
+
+div[data-testid="stMetric"]{
+
+    background:rgba(128,128,128,0.05);
+
+    border:1px solid rgba(128,128,128,0.15);
+
+    border-radius:15px;
+
+    padding:15px;
+
+    box-shadow:0 2px 10px rgba(0,0,0,0.05);
+}
+
+div[data-testid="stMetric"]:hover{
+
+    transform:translateY(-2px);
+
+    transition:0.25s ease;
+}
+
+/* ========= SIDEBAR ========= */
+
+section[data-testid="stSidebar"]{
+
+    border-right:1px solid rgba(128,128,128,0.15);
+}
+
+/* ========= TAB ========= */
+
+button[data-baseweb="tab"]{
+
+    font-size:16px;
+
+    font-weight:600;
+}
+
+button[data-baseweb="tab"][aria-selected="true"]{
+
+    color:#2563EB;
+
+    border-bottom:3px solid #2563EB;
+}
+
+/* ========= BUTTON ========= */
+
+.stButton > button{
+
+    width:100%;
+
+    border-radius:10px;
+
+    height:45px;
+
+    font-weight:600;
+}
+
+.stDownloadButton > button{
+
+    width:100%;
+
+    border-radius:10px;
+
+    font-weight:600;
+}
+
+/* ========= DATAFRAME ========= */
+
+[data-testid="stDataFrame"]{
+
+    border-radius:12px;
+}
+
+/* ========= ALERT ========= */
+
+[data-testid="stSuccess"]{
+
+    border-radius:12px;
+}
+
+[data-testid="stInfo"]{
+
+    border-radius:12px;
+}
+
+[data-testid="stError"]{
+
+    border-radius:12px;
+}
+
+/* ========= SCROLL ========= */
+
+::-webkit-scrollbar{
+
+    width:10px;
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:#2563EB;
+
+    border-radius:20px;
+}
+
+</style>
 """, unsafe_allow_html=True)
 
 # =====================================================
@@ -130,13 +275,22 @@ accuracy = accuracy_score(
 # =====================================================
 # HEADER
 # =====================================================
-st.markdown("""
-<div class="main-title">
-🤖 SVM Explorer
-</div>
 
-<div class="sub-title">
-Breast Cancer Prediction using Support Vector Machine
+st.markdown("""
+<div class="header-container">
+
+    <div class="header-title">
+        🤖 SVM Explorer
+    </div>
+
+    <div class="header-subtitle">
+        Breast Cancer Prediction using Support Vector Machine
+    </div>
+
+    <div class="header-desc">
+        Machine Learning • Data Science • Classification
+    </div>
+
 </div>
 """, unsafe_allow_html=True)
 
