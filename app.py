@@ -40,13 +40,17 @@ button[data-baseweb="tab"][aria-selected="true"]{color:#2563EB;border-bottom:3px
 try:
     df = pd.read_csv("breast_cancer.csv")
     
-    X = df.iloc[:, :-1]
-    y = df.iloc[:, -1]
-    target_col = df.columns[-1]
+    target_col = "diagnosis"
+    
+    if "id" in df.columns:
+        X = df.drop(columns=["id", target_col])
+    else:
+        X = df.drop(columns=[target_col])
+        
+    y = df[target_col]
     
     if y.dtype == 'object':
         y = pd.factorize(y)[0]
-        df[target_col] = y
 
     with st.sidebar:
         st.title("⚙️ SVM Status")
@@ -111,17 +115,22 @@ try:
                 probabilities = st.session_state['trained_svm'].predict_proba(sample_scaled)[0]
                 max_prob = np.max(probabilities)
                 
-                st.info(f"Kết quả dự đoán phân lớp từ SVM: **Nhãn {prediction}** (Độ tin cậy: {max_prob*100:.2f}%)")
+                label_mapping = {0: "Mác ác tính (M)", 1: "Lành tính (B)"} if df[target_col].iloc[0] == 'M' else {0: "Lành tính (B)", 1: "Mác ác tính (M)"}
+                pred_label = label_mapping.get(prediction, f"Nhãn {prediction}")
+                
+                st.info(f"Kết quả dự đoán phân lớp từ SVM: **{pred_label}** (Độ tin cậy: {max_prob*100:.2f}%)")
 
     with tab2:
         st.header("📊 Hệ thống 5 Biểu đồ Trực quan hóa Đa phong cách")
         
         numeric_cols = X.select_dtypes(include=[np.number]).columns.tolist()
+        df_vis = df.copy()
+        df_vis[target_col] = y
         
         st.subheader("1️⃣ Phong cách Tần suất (Histogram) - Phân phối thuộc tính đầu vào")
         selected_hist_col = st.selectbox("Chọn thuộc tính cần xem phân phối:", numeric_cols, index=0)
         fig1 = px.histogram(
-            df, 
+            df_vis, 
             x=selected_hist_col, 
             color=target_col,
             marginal="rug",
@@ -135,7 +144,7 @@ try:
         st.subheader("2️⃣ Phong cách Đối sánh Tập hợp (Boxplot) - Phát hiện Outliers & Biên độ")
         selected_box_col = st.selectbox("Chọn thuộc tính cần đối sánh biên độ dữ liệu:", numeric_cols, index=min(1, len(numeric_cols)-1))
         fig2 = px.box(
-            df, 
+            df_vis, 
             y=selected_box_col, 
             x=target_col, 
             color=target_col,
@@ -149,7 +158,7 @@ try:
 
         st.subheader("3️⃣ Phong cách Ma trận Mật độ (Heatmap) - Đo lường độ tương quan tuyến tính")
         if len(numeric_cols) > 1:
-            corr_matrix = df[numeric_cols + [target_col]].corr()
+            corr_matrix = df_vis[numeric_cols + [target_col]].corr()
             fig3, ax = plt.subplots(figsize=(12, 8))
             sns.heatmap(
                 corr_matrix, 
@@ -172,12 +181,10 @@ try:
             scat_col1 = st.selectbox("Chọn thuộc tính trục X:", numeric_cols, index=0)
             scat_col2 = st.selectbox("Chọn thuộc tính trục Y:", numeric_cols, index=min(1, len(numeric_cols)-1))
             fig4 = px.scatter(
-                df, 
+                df_vis, 
                 x=scat_col1, 
                 y=scat_col2, 
                 color=target_col,
-                size=df[scat_col1].abs() if df[scat_col1].min() >= 0 else None,
-                hover_data=numeric_cols[:3],
                 title=f"Không gian phân tách dữ liệu thực tế giữa {scat_col1} và {scat_col2}",
                 template="plotly_dark"
             )
@@ -187,7 +194,7 @@ try:
         st.markdown("---")
 
         st.subheader("5️⃣ Phong cách Tỉ lệ Phân chia (Pie Chart) - Cân bằng nhãn lớp Target")
-        target_counts = df[target_col].value_counts().reset_index()
+        target_counts = df_vis[target_col].value_counts().reset_index()
         target_counts.columns = ['Nhãn lớp', 'Số lượng mẫu']
         fig5 = px.pie(
             target_counts, 
