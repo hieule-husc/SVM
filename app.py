@@ -158,7 +158,7 @@ try:
     with tab1:
         st.subheader("🚀 Tiến trình phân tích & Huấn luyện")
         
-        if st.button("Khai hỏa quy trình huấn luyện SVM Pipeline", use_container_width=True):
+        if st.button("Tiến hành quy trình huấn luyện SVM Pipeline", use_container_width=True):
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
             
             scaler = StandardScaler()
