@@ -120,6 +120,16 @@ button[data-baseweb="tab"][aria-selected="true"] {
     transform: scale(0.98);
 }
 
+/* CSS bo góc mượt mà cho tất cả các biểu đồ Plotly trong ứng dụng */
+.stPlotlyChart {
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    background: white;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+}
+
 .input-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
@@ -256,7 +266,7 @@ try:
             template="plotly_white",
             color_discrete_sequence=px.colors.qualitative.Safe
         )
-        fig1.update_layout(margin=dict(l=20, r=20, t=20, b=20), borderRadius=15)
+        fig1.update_layout(margin=dict(l=20, r=20, t=20, b=20)) # Đã loại bỏ borderRadius sai cú pháp ở đây
         st.plotly_chart(fig1, use_container_width=True)
         st.markdown("---")
 
@@ -328,6 +338,21 @@ try:
         fig5.update_traces(textinfo='percent+label', pull=[0.02] * len(target_counts))
         fig5.update_layout(margin=dict(l=20, r=20, t=20, b=20))
         st.plotly_chart(fig5, use_container_width=True)
+
+    with tab3:
+        st.subheader("📋 Phân tích dữ liệu gốc")
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.write("📊 **10 bản ghi dữ liệu lâm sàng đầu tiên:**")
+        st.dataframe(df.head(10), use_container_width=True)
+        
+        st.markdown("<br><hr>", unsafe_allow_html=True)
+        st.write("📈 **Bảng thống kê thuộc tính phân phối mô tả:**")
+        st.dataframe(df.describe(), use_container_width=True)
+        
+        st.markdown("<br><hr>", unsafe_allow_html=True)
+        st.write("🔍 **Báo cáo mật độ dữ liệu khuyết thiếu (Missing Values):**")
+        missing_data = pd.DataFrame({"Trường thuộc tính số": df.columns, "Số ô trống": df.isnull().sum().values})
+        st.dataframe(missing_data, use_container_width=True)
 
 except FileNotFoundError:
     st.error("❌ Không tìm thấy tập tin dữ liệu 'breast_cancer.csv'.")
