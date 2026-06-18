@@ -17,10 +17,10 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-.block-container{padding-top:1rem;padding-bottom:1rem;max-width:1400px;}
-.header-container{padding:30px;border-radius:20px;margin-bottom:20px;background:linear-gradient(135deg, rgba(37,99,235,0.12), rgba(59,130,246,0.03));border:1px solid rgba(128,128,128,0.15);}
-.header-title{text-align:center;font-size:40px;font-weight:800;margin-bottom:10px;color:inherit;}
-.header-subtitle{text-align:center;font-size:20px;font-weight:500;color:inherit;opacity:0.9;}
+.block-container{padding-top:3.5rem;padding-bottom:1rem;max-width:1400px;}
+.header-container{padding:40px 30px;border-radius:20px;margin-top:15px;margin-bottom:25px;background:linear-gradient(135deg, rgba(37,99,235,0.12), rgba(59,130,246,0.03));border:1px solid rgba(128,128,128,0.15);}
+.header-title{text-align:center;font-size:40px;font-weight:800;margin-bottom:12px;color:inherit;line-height:1.2;}
+.header-subtitle{text-align:center;font-size:20px;font-weight:500;color:inherit;opacity:0.9;line-height:1.4;}
 div[data-testid="stMetric"]{background:rgba(128,128,128,0.05);border:1px solid rgba(128,128,128,0.15);border-radius:15px;padding:15px;box-shadow:0 2px 10px rgba(0,0,0,0.05);}
 div[data-testid="stMetric"]:hover{transform:translateY(-2px);transition:0.25s ease;}
 section[data-testid="stSidebar"]{border-right:1px solid rgba(128,128,128,0.15);}
@@ -61,7 +61,7 @@ try:
     st.markdown(f"""
     <div class="header-container">
         <div class="header-title">⚡ SVM Comprehensive Evaluation Studio</div>
-        <div class="header-subtitle">Hệ thống dự đoán ung thư vú bằng thuật toán Support Vector Machine (SVM)</div>
+        <div class="header-subtitle">Hệ thống tối ưu hóa và đánh giá hiệu năng thuật toán Support Vector Machine (SVM)</div>
     </div>
     """, unsafe_allow_html=True)
 
