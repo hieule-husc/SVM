@@ -24,27 +24,36 @@ st.set_page_config(
 # CSS
 # =====================================================
 st.markdown("""
-<style>
+<div class="header-container">
 
-.main-title{
-    font-size:42px;
-    font-weight:bold;
-    text-align:center;
-    color:#2563eb;
-}
+<h1 style="
+text-align:center;
+font-size:60px;
+font-weight:900;
+color:white;
+margin-bottom:5px;
+">
+🤖 SVM Explorer
+</h1>
 
-.sub-title{
-    text-align:center;
-    color:#6b7280;
-    font-size:18px;
-    margin-bottom:25px;
-}
+<p style="
+text-align:center;
+font-size:24px;
+color:#F8FAFC;
+font-weight:500;
+">
+Support Vector Machine for Breast Cancer Classification
+</p>
 
-.block-container{
-    padding-top:1rem;
-}
+<p style="
+text-align:center;
+color:#CBD5E1;
+font-size:16px;
+">
+Machine Learning • Data Science • Classification
+</p>
 
-</style>
+</div>
 """, unsafe_allow_html=True)
 
 # =====================================================
