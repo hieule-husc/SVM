@@ -4,987 +4,202 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
-
-from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score
+from sklearn.svm import SVC, SVR
+from sklearn.metrics import accuracy_score, r2_score, mean_absolute_error
 
-# =====================================================
-# CONFIG
-# =====================================================
 st.set_page_config(
-    page_title="SVM Explorer",
-    page_icon="🤖",
+    page_title="SVM Evaluation System",
+    page_icon="🧠",
     layout="wide"
 )
 
-# =====================================================
-# CUSTOM CSS
-# =====================================================
-
 st.markdown("""
 <style>
-
-/* ========= GLOBAL ========= */
-
-.block-container{
-    padding-top:1rem;
-    padding-bottom:1rem;
-    max-width:1400px;
-}
-
-/* ========= HEADER ========= */
-
-.header-container{
-
-    padding:30px;
-
-    border-radius:20px;
-
-    margin-bottom:20px;
-
-    background:linear-gradient(
-        135deg,
-        rgba(37,99,235,0.12),
-        rgba(59,130,246,0.03)
-    );
-
-    border:1px solid rgba(128,128,128,0.15);
-}
-
-.header-title{
-
-    text-align:center;
-
-    font-size:50px;
-
-    font-weight:800;
-
-    margin-bottom:10px;
-
-    color:inherit;
-}
-
-.header-subtitle{
-
-    text-align:center;
-
-    font-size:22px;
-
-    font-weight:500;
-
-    color:inherit;
-
-    opacity:0.9;
-}
-
-.header-desc{
-
-    text-align:center;
-
-    font-size:15px;
-
-    color:inherit;
-
-    opacity:0.7;
-
-    margin-top:10px;
-}
-
-/* ========= KPI ========= */
-
-div[data-testid="stMetric"]{
-
-    background:rgba(128,128,128,0.05);
-
-    border:1px solid rgba(128,128,128,0.15);
-
-    border-radius:15px;
-
-    padding:15px;
-
-    box-shadow:0 2px 10px rgba(0,0,0,0.05);
-}
-
-div[data-testid="stMetric"]:hover{
-
-    transform:translateY(-2px);
-
-    transition:0.25s ease;
-}
-
-/* ========= SIDEBAR ========= */
-
-section[data-testid="stSidebar"]{
-
-    border-right:1px solid rgba(128,128,128,0.15);
-}
-
-/* ========= TAB ========= */
-
-button[data-baseweb="tab"]{
-
-    font-size:16px;
-
-    font-weight:600;
-}
-
-button[data-baseweb="tab"][aria-selected="true"]{
-
-    color:#2563EB;
-
-    border-bottom:3px solid #2563EB;
-}
-
-/* ========= BUTTON ========= */
-
-.stButton > button{
-
-    width:100%;
-
-    border-radius:10px;
-
-    height:45px;
-
-    font-weight:600;
-}
-
-.stDownloadButton > button{
-
-    width:100%;
-
-    border-radius:10px;
-
-    font-weight:600;
-}
-
-/* ========= DATAFRAME ========= */
-
-[data-testid="stDataFrame"]{
-
-    border-radius:12px;
-}
-
-/* ========= ALERT ========= */
-
-[data-testid="stSuccess"]{
-
-    border-radius:12px;
-}
-
-[data-testid="stInfo"]{
-
-    border-radius:12px;
-}
-
-[data-testid="stError"]{
-
-    border-radius:12px;
-}
-
-/* ========= SCROLL ========= */
-
-::-webkit-scrollbar{
-
-    width:10px;
-}
-
-::-webkit-scrollbar-thumb{
-
-    background:#2563EB;
-
-    border-radius:20px;
-}
-
+.block-container{padding-top:1rem;padding-bottom:1rem;max-width:1400px;}
+.header-container{padding:30px;border-radius:20px;margin-bottom:20px;background:linear-gradient(135deg, rgba(37,99,235,0.12), rgba(59,130,246,0.03));border:1px solid rgba(128,128,128,0.15);}
+.header-title{text-align:center;font-size:40px;font-weight:800;margin-bottom:10px;color:inherit;}
+.header-subtitle{text-align:center;font-size:20px;font-weight:500;color:inherit;opacity:0.9;}
+div[data-testid="stMetric"]{background:rgba(128,128,128,0.05);border:1px solid rgba(128,128,128,0.15);border-radius:15px;padding:15px;box-shadow:0 2px 10px rgba(0,0,0,0.05);}
+div[data-testid="stMetric"]:hover{transform:translateY(-2px);transition:0.25s ease;}
+section[data-testid="stSidebar"]{border-right:1px solid rgba(128,128,128,0.15);}
+button[data-baseweb="tab"]{font-size:16px;font-weight:600;}
+button[data-baseweb="tab"][aria-selected="true"]{color:#2563EB;border-bottom:3px solid #2563EB;}
+.stButton > button{width:100%;border-radius:10px;height:45px;font-weight:600;}
+.stDownloadButton > button{width:100%;border-radius:10px;font-weight:600;}
+[data-testid="stDataFrame"]{border-radius:12px;}
+[data-testid="stSuccess"]{border-radius:12px;}
+[data-testid="stInfo"]{border-radius:12px;}
+[data-testid="stError"]{border-radius:12px;}
+::-webkit-scrollbar{width:10px;}
+::-webkit-scrollbar-thumb{background:#2563EB;border-radius:20px;}
 </style>
 """, unsafe_allow_html=True)
 
-# =====================================================
-# LOAD DATA
-# =====================================================
-data = load_breast_cancer()
-
-df = pd.DataFrame(
-    data.data,
-    columns=data.feature_names
-)
-
-df["target"] = data.target
-
-# =====================================================
-# SIDEBAR
-# =====================================================
-with st.sidebar:
-
-    st.title("⚙️ Model Settings")
-
-    kernel = st.selectbox(
-        "Kernel",
-        ["linear", "rbf", "poly", "sigmoid"]
-    )
-
-    st.markdown("---")
-
-    st.info("""
-    Support Vector Machine (SVM)
-
-    Ứng dụng:
-    • Phân loại dữ liệu
-    • Dự đoán bệnh
-    • Nhận diện mẫu
-    • Machine Learning
-    """)
-
-# =====================================================
-# TRAIN MODEL
-# =====================================================
-X = df.drop("target", axis=1)
-y = df["target"]
-
-X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.2,
-    random_state=42
-)
-
-scaler = StandardScaler()
-
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
-
-model = SVC(
-    kernel=kernel,
-    probability=True
-)
-
-model.fit(
-    X_train_scaled,
-    y_train
-)
-
-pred = model.predict(X_test_scaled)
-
-accuracy = accuracy_score(
-    y_test,
-    pred
-)
-
-# =====================================================
-# HEADER
-# =====================================================
-
-st.markdown("""
-<div class="header-container">
-
-    <div class="header-title">
-        🤖 SVM Explorer
-    </div>
-
-    <div class="header-subtitle">
-        Breast Cancer Prediction using Support Vector Machine
-    </div>
-
-    <div class="header-desc">
-        Machine Learning • Data Science • Classification
-    </div>
-
-</div>
-""", unsafe_allow_html=True)
-
-# =====================================================
-# KPI DASHBOARD
-# =====================================================
-c1, c2, c3, c4 = st.columns(4)
-
-c1.metric(
-    "📊 Samples",
-    df.shape[0]
-)
-
-c2.metric(
-    "📋 Features",
-    X.shape[1]
-)
-
-c3.metric(
-    "🎯 Accuracy",
-    f"{accuracy*100:.2f}%"
-)
-
-c4.metric(
-    "🧠 Kernel",
-    kernel.upper()
-)
-
-st.markdown("---")
-
-# =====================================================
-# TABS
-# =====================================================
-tab1, tab2, tab3 = st.tabs(
-[
-    "📥 Input dữ liệu",
-    "📊 Trực quan hóa",
-    "📋 Dataset"
-]
-)
-
-# =====================================================
-# TAB 1
-# =====================================================
-with tab1:
-
-    st.subheader("⚙️ Cấu hình và huấn luyện SVM")
-
-    st.markdown("""
-    Support Vector Machine (SVM) là thuật toán học máy dùng cho
-    các bài toán phân loại và hồi quy.
-
-    Người dùng có thể thay đổi các tham số để quan sát ảnh hưởng
-    đến hiệu năng mô hình.
-    """)
-
-    # ==========================
-    # CẤU HÌNH
-    # ==========================
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        kernel = st.selectbox(
-            "Kernel Function",
-            ["linear", "rbf", "poly", "sigmoid"]
-        )
-
-        C = st.slider(
-            "Regularization Parameter (C)",
-            0.1,
-            100.0,
-            1.0
-        )
-
-    with col2:
-
-        gamma = st.selectbox(
-            "Gamma",
-            ["scale", "auto"]
-        )
-
-        test_size = st.slider(
-            "Test Size",
-            0.1,
-            0.5,
-            0.2
-        )
-
-    degree = 3
-
-    if kernel == "poly":
-
-        degree = st.slider(
-            "Polynomial Degree",
-            2,
-            10,
-            3
-        )
-
-    # ==========================
-    # TRAIN MODEL
-    # ==========================
-
-    if st.button(
-        "🚀 Train Model",
-        use_container_width=True
-    ):
-
-        X_train, X_test, y_train, y_test = train_test_split(
-            X,
-            y,
-            test_size=test_size,
-            random_state=42
-        )
-
-        scaler = StandardScaler()
-
-        X_train_scaled = scaler.fit_transform(
-            X_train
-        )
-
-        X_test_scaled = scaler.transform(
-            X_test
-        )
-
-        model = SVC(
-            kernel=kernel,
-            C=C,
-            gamma=gamma,
-            degree=degree,
-            probability=True
-        )
-
-        model.fit(
-            X_train_scaled,
-            y_train
-        )
-
-        y_pred = model.predict(
-            X_test_scaled
-        )
-
-        from sklearn.metrics import (
-            precision_score,
-            recall_score,
-            f1_score
-        )
-
-        accuracy = accuracy_score(
-            y_test,
-            y_pred
-        )
-
-        precision = precision_score(
-            y_test,
-            y_pred
-        )
-
-        recall = recall_score(
-            y_test,
-            y_pred
-        )
-
-        f1 = f1_score(
-            y_test,
-            y_pred
-        )
-
-        st.success("Huấn luyện thành công!")
-
-        m1, m2, m3, m4, m5 = st.columns(5)
-
-        m1.metric(
-            "Accuracy",
-            f"{accuracy*100:.2f}%"
-        )
-
-        m2.metric(
-            "Precision",
-            f"{precision*100:.2f}%"
-        )
-
-        m3.metric(
-            "Recall",
-            f"{recall*100:.2f}%"
-        )
-
-        m4.metric(
-            "F1 Score",
-            f"{f1*100:.2f}%"
-        )
-
-        m5.metric(
-            "Support Vectors",
-            int(sum(model.n_support_))
-        )
-
+try:
+    df = pd.read_csv("breast_cancer.csv")
+    
+    with st.sidebar:
+        st.title("⚙️ SVM Data Input")
+        st.success("Đã tìm thấy file breast_cancer.csv")
+        columns_list = list(df.columns)
+        target_col = st.selectbox("Chọn cột Target (Nhãn)", columns_list, index=len(columns_list)-1)
         st.markdown("---")
+        st.info("""
+        **Hệ thống phân tích SVM**
+        Dữ liệu đã nạp sẵn từ tệp cấu hình của bạn. Chỉnh sửa tham số huấn luyện để kiểm tra hiệu năng.
+        """)
 
-        st.subheader("📌 Thông tin mô hình")
+    X = df.drop(target_col, axis=1)
+    y = df[target_col]
+    
+    is_classification = len(np.unique(y)) <= 10 or y.dtype == 'object'
+    if is_classification and y.dtype == 'object':
+        y = pd.factorize(y)[0]
 
-        st.write(f"Kernel: {kernel}")
-        st.write(f"C: {C}")
-        st.write(f"Gamma: {gamma}")
-        st.write(f"Support Vectors: {sum(model.n_support_)}")
+    st.markdown(f"""
+    <div class="header-container">
+        <div class="header-title">⚡ SVM Comprehensive Evaluation Studio</div>
+        <div class="header-subtitle">Hệ thống tối ưu hóa và đánh giá hiệu năng thuật toán Support Vector Machine (SVM)</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        st.markdown("---")
+    tab1, tab2, tab3 = st.tabs(["📥 Huấn luyện & Dự đoán", "📊 Trực quan hóa", "📋 Xem Dataset"])
 
-        st.subheader("🎯 Demo dự đoán")
+    with tab1:
+        st.subheader("⚙️ Cấu hình Hyperparameters cho SVM")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            C = st.slider("Regularization Parameter (C)", 0.1, 100.0, 1.0)
+            gamma = st.selectbox("Gamma", ["scale", "auto"])
+        with col2:
+            test_size = st.slider("Tỷ lệ Test Size", 0.1, 0.5, 0.2)
+            kernel_type = st.selectbox("Cơ chế Kernel SVM", ["rbf", "linear", "poly", "sigmoid"])
 
-        c1, c2, c3 = st.columns(3)
+        degree = 3
+        if kernel_type == "poly":
+            degree = st.slider("Polynomial Degree", 2, 10, 3)
 
-        with c1:
-            radius = st.number_input(
-                "Radius Mean",
-                value=float(df["mean radius"].mean())
-            )
+        if st.button("🚀 Thực thi Huấn luyện SVM", use_container_width=True):
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=42)
+            
+            scaler = StandardScaler()
+            X_train_scaled = scaler.fit_transform(X_train)
+            X_test_scaled = scaler.transform(X_test)
 
-        with c2:
-            texture = st.number_input(
-                "Texture Mean",
-                value=float(df["mean texture"].mean())
-            )
-
-        with c3:
-            perimeter = st.number_input(
-                "Perimeter Mean",
-                value=float(df["mean perimeter"].mean())
-            )
-
-        if st.button(
-            "Predict Sample"
-        ):
-
-            sample = X.mean().values
-
-            cols = list(X.columns)
-
-            sample[
-                cols.index("mean radius")
-            ] = radius
-
-            sample[
-                cols.index("mean texture")
-            ] = texture
-
-            sample[
-                cols.index("mean perimeter")
-            ] = perimeter
-
-            sample = sample.reshape(
-                1,
-                -1
-            )
-
-            sample_scaled = scaler.transform(
-                sample
-            )
-
-            pred = model.predict(
-                sample_scaled
-            )[0]
-
-            prob = model.predict_proba(
-                sample_scaled
-            ).max()
-
-            if pred == 1:
-
-                st.success(
-                    f"✅ Benign ({prob*100:.2f}%)"
-                )
-
+            if is_classification:
+                model = SVC(kernel=kernel_type, C=C, gamma=gamma, degree=degree, probability=True)
+                model.fit(X_train_scaled, y_train)
+                
+                train_pred = model.predict(X_train_scaled)
+                test_pred = model.predict(X_test_scaled)
+                
+                acc_train = accuracy_score(y_train, train_pred)
+                acc_test = accuracy_score(y_test, test_pred)
+                
+                r2_train = r2_score(y_train, train_pred)
+                r2_test = r2_score(y_test, test_pred)
+                
+                mae_train = mean_absolute_error(y_train, train_pred)
+                mae_test = mean_absolute_error(y_test, test_pred)
+                
+                st.success("Huấn luyện Mô hình SVM Phân loại thành công!")
+                
+                m1, m2, m3 = st.columns(3)
+                m1.metric("Accuracy (Train / Test)", f"{acc_train*100:.2f}% / {acc_test*100:.2f}%")
+                m2.metric("R² Score (Train / Test)", f"{r2_train:.4f} / {r2_test:.4f}")
+                m3.metric("MAE (Train / Test)", f"{mae_train:.4f} / {mae_test:.4f}")
             else:
-
-                st.error(
-                    f"⚠️ Malignant ({prob*100:.2f}%)"
-                )
-
-# =====================================================
-# TAB 2
-# =====================================================
-with tab2:
-
-    st.header("📊 Trực quan hóa dữ liệu")
-
-    st.markdown("""
-    Các biểu đồ dưới đây giúp phân tích dữ liệu trước khi xây dựng mô hình SVM.
-    Mỗi biểu đồ thể hiện một góc nhìn khác nhau về tập dữ liệu Breast Cancer.
-    """)
-
-    # =====================================================
-    # BIỂU ĐỒ 1
-    # CLASS DISTRIBUTION
-    # =====================================================
-
-    st.subheader("1️⃣ Class Distribution")
-
-    class_counts = (
-        df["target"]
-        .map({
-            0: "Malignant",
-            1: "Benign"
-        })
-        .value_counts()
-    )
-
-    fig1 = px.bar(
-        x=class_counts.index,
-        y=class_counts.values,
-        color=class_counts.index,
-        text=class_counts.values,
-        title="Phân bố số lượng mẫu theo lớp"
-    )
-
-    fig1.update_layout(
-        xaxis_title="Loại khối u",
-        yaxis_title="Số lượng mẫu",
-        height=500
-    )
-
-    st.plotly_chart(
-        fig1,
-        use_container_width=True
-    )
-
-    st.info("""
-    Biểu đồ cho thấy số lượng mẫu Benign (lành tính)
-    và Malignant (ác tính) trong tập dữ liệu.
-    """)
-
-    st.markdown("---")
-
-    # =====================================================
-    # BIỂU ĐỒ 2
-    # HISTOGRAM
-    # =====================================================
-
-    st.subheader("2️⃣ Distribution of Mean Radius")
-
-    fig2 = px.histogram(
-        df,
-        x="mean radius",
-        nbins=30,
-        marginal="box",
-        title="Phân bố Mean Radius"
-    )
-
-    fig2.update_layout(
-        xaxis_title="Mean Radius",
-        yaxis_title="Frequency",
-        height=500
-    )
-
-    st.plotly_chart(
-        fig2,
-        use_container_width=True
-    )
-
-    st.info("""
-    Histogram cho biết phân bố kích thước trung bình của khối u.
-    Đây là một thuộc tính quan trọng trong chẩn đoán.
-    """)
-
-    st.markdown("---")
-
-    # =====================================================
-    # BIỂU ĐỒ 3
-    # BOXPLOT
-    # =====================================================
-
-    st.subheader("3️⃣ Mean Texture Analysis")
-
-    fig3 = px.box(
-        df,
-        y="mean texture",
-        color=df["target"].map({
-            0: "Malignant",
-            1: "Benign"
-        }),
-        title="So sánh Mean Texture giữa các lớp"
-    )
-
-    fig3.update_layout(
-        xaxis_title="Class",
-        yaxis_title="Mean Texture",
-        height=500
-    )
-
-    st.plotly_chart(
-        fig3,
-        use_container_width=True
-    )
-
-    st.info("""
-    Boxplot giúp phát hiện các giá trị ngoại lai (Outliers)
-    và so sánh phân bố Mean Texture giữa hai nhóm dữ liệu.
-    """)
-
-    st.markdown("---")
-
-    # =====================================================
-    # BIỂU ĐỒ 4
-    # HEATMAP
-    # =====================================================
-
-    st.subheader("4️⃣ Correlation Heatmap")
-
-    selected_columns = [
-        "mean radius",
-        "mean texture",
-        "mean perimeter",
-        "mean area",
-        "mean smoothness",
-        "target"
-    ]
-
-    corr_matrix = df[selected_columns].corr()
-
-    fig4, ax = plt.subplots(
-        figsize=(10, 6)
-    )
-
-    sns.heatmap(
-        corr_matrix,
-        annot=True,
-        cmap="RdBu_r",
-        fmt=".2f",
-        linewidths=0.5,
-        ax=ax
-    )
-
-    ax.set_title(
-        "Correlation Matrix"
-    )
-
-    st.pyplot(fig4)
-
-    st.info("""
-    Heatmap thể hiện mức độ tương quan giữa các thuộc tính.
-    Giá trị càng gần 1 hoặc -1 thì mối tương quan càng mạnh.
-    """)
-
-    st.markdown("---")
-
-    # =====================================================
-    # BIỂU ĐỒ 5
-    # SCATTER PLOT
-    # =====================================================
-
-    st.subheader("5️⃣ Feature Separation")
-
-    fig5 = px.scatter(
-        df,
-        x="mean radius",
-        y="mean texture",
-        color=df["target"].map({
-            0: "Malignant",
-            1: "Benign"
-        }),
-        size="mean area",
-        hover_data=[
-            "mean perimeter",
-            "mean smoothness"
-        ],
-        title="Phân tách dữ liệu theo đặc trưng"
-    )
-
-    fig5.update_layout(
-        xaxis_title="Mean Radius",
-        yaxis_title="Mean Texture",
-        height=600
-    )
-
-    st.plotly_chart(
-        fig5,
-        use_container_width=True
-    )
-
-    st.info("""
-    Scatter Plot giúp trực quan hóa khả năng phân tách dữ liệu.
-    Đây là cơ sở để thuật toán SVM tìm siêu phẳng (Hyperplane)
-    tối ưu nhằm phân loại các lớp.
-    """)
-# =====================================================
-# TAB 3
-# =====================================================
-with tab3:
-
-    st.header("📋 Dataset Explorer")
-
-    st.markdown("""
-    Khám phá bộ dữ liệu Breast Cancer Wisconsin Dataset được sử dụng
-    trong quá trình huấn luyện và đánh giá mô hình SVM.
-    """)
-
-    # =====================================================
-    # THÔNG TIN CHUNG
-    # =====================================================
-
-    st.subheader("📌 Thông tin tổng quan")
-
-    c1, c2, c3, c4 = st.columns(4)
-
-    c1.metric(
-        "Số dòng",
-        df.shape[0]
-    )
-
-    c2.metric(
-        "Số cột",
-        df.shape[1]
-    )
-
-    c3.metric(
-        "Số đặc trưng",
-        X.shape[1]
-    )
-
-    c4.metric(
-        "Số lớp",
-        len(df["target"].unique())
-    )
-
-    st.markdown("---")
-
-    # =====================================================
-    # TOP 10 DÒNG ĐẦU
-    # =====================================================
-
-    st.subheader("📄 10 dòng dữ liệu đầu tiên")
-
-    st.dataframe(
-        df.head(10),
-        use_container_width=True
-    )
-
-    st.markdown("---")
-
-    # =====================================================
-    # THỐNG KÊ MÔ TẢ
-    # =====================================================
-
-    st.subheader("📈 Thống kê mô tả")
-
-    st.dataframe(
-        df.describe(),
-        use_container_width=True
-    )
-
-    st.markdown("---")
-
-    # =====================================================
-    # KIỂM TRA DỮ LIỆU THIẾU
-    # =====================================================
-
-    st.subheader("🔍 Kiểm tra dữ liệu thiếu")
-
-    missing_data = pd.DataFrame({
-        "Column": df.columns,
-        "Missing Values": df.isnull().sum().values
-    })
-
-    st.dataframe(
-        missing_data,
-        use_container_width=True
-    )
-
-    if missing_data["Missing Values"].sum() == 0:
-        st.success("✅ Dataset không chứa dữ liệu thiếu.")
-    else:
-        st.warning("⚠️ Dataset có dữ liệu thiếu.")
-
-    st.markdown("---")
-
-    # =====================================================
-    # KIỂM TRA KIỂU DỮ LIỆU
-    # =====================================================
-
-    st.subheader("🗂️ Kiểu dữ liệu")
-
-    dtype_df = pd.DataFrame({
-        "Column": df.columns,
-        "Data Type": df.dtypes.astype(str)
-    })
-
-    st.dataframe(
-        dtype_df,
-        use_container_width=True
-    )
-
-    st.markdown("---")
-
-    # =====================================================
-    # PHÂN BỐ NHÃN
-    # =====================================================
-
-    st.subheader("🎯 Phân bố nhãn")
-
-    target_counts = (
-        df["target"]
-        .map({
-            0: "Malignant",
-            1: "Benign"
-        })
-        .value_counts()
-    )
-
-    st.dataframe(
-        pd.DataFrame({
-            "Class": target_counts.index,
-            "Count": target_counts.values
-        }),
-        use_container_width=True
-    )
-
-    st.markdown("---")
-
-    # =====================================================
-    # LỰA CHỌN CỘT XEM THỐNG KÊ
-    # =====================================================
-
-    st.subheader("📊 Thống kê theo thuộc tính")
-
-    selected_column = st.selectbox(
-        "Chọn thuộc tính",
-        X.columns
-    )
-
-    col1, col2, col3, col4 = st.columns(4)
-
-    col1.metric(
-        "Mean",
-        f"{df[selected_column].mean():.2f}"
-    )
-
-    col2.metric(
-        "Min",
-        f"{df[selected_column].min():.2f}"
-    )
-
-    col3.metric(
-        "Max",
-        f"{df[selected_column].max():.2f}"
-    )
-
-    col4.metric(
-        "Std",
-        f"{df[selected_column].std():.2f}"
-    )
-
-    st.markdown("---")
-
-    # =====================================================
-    # TÌM KIẾM DỮ LIỆU
-    # =====================================================
-
-    st.subheader("🔎 Tìm kiếm dữ liệu")
-
-    row_index = st.number_input(
-        "Nhập chỉ số dòng",
-        min_value=0,
-        max_value=len(df)-1,
-        value=0
-    )
-
-    st.write("Thông tin dòng được chọn:")
-
-    st.dataframe(
-        df.iloc[[row_index]],
-        use_container_width=True
-    )
-
-    st.markdown("---")
-
-    # =====================================================
-    # DOWNLOAD DATASET
-    # =====================================================
-
-    st.subheader("⬇️ Tải dữ liệu")
-
-    csv = df.to_csv(
-        index=False
-    )
-
-    st.download_button(
-        label="Download Dataset CSV",
-        data=csv,
-        file_name="breast_cancer_dataset.csv",
-        mime="text/csv"
-    )
-
-    st.success(
-        "Dataset sẵn sàng để sử dụng cho huấn luyện và đánh giá mô hình SVM."
-    )
+                model = SVR(kernel=kernel_type, C=C, gamma=gamma, degree=degree)
+                model.fit(X_train_scaled, y_train)
+                
+                train_pred = model.predict(X_train_scaled)
+                test_pred = model.predict(X_test_scaled)
+                
+                r2_train = r2_score(y_train, train_pred)
+                r2_test = r2_score(y_test, test_pred)
+                
+                mae_train = mean_absolute_error(y_train, train_pred)
+                mae_test = mean_absolute_error(y_test, test_pred)
+                
+                st.success("Huấn luyện Mô hình SVM Hồi quy thành công!")
+                
+                m1, m2 = st.columns(2)
+                m1.metric("R² Score (Train / Test)", f"{r2_train:.4f} / {r2_test:.4f}")
+                m2.metric("MAE (Train / Test)", f"{mae_train:.4f} / {mae_test:.4f}")
+
+            st.session_state['trained_svm'] = model
+            st.session_state['svm_scaler'] = scaler
+            st.session_state['features_columns'] = list(X.columns)
+            st.session_state['is_classification'] = is_classification
+
+        if 'trained_svm' in st.session_state:
+            st.markdown("---")
+            st.subheader("🎯 Dự đoán dữ liệu mẫu mới")
+            
+            feature_inputs = {}
+            cols = st.columns(min(4, len(X.columns)))
+            for idx, col_name in enumerate(X.columns):
+                with cols[idx % len(cols)]:
+                    feature_inputs[col_name] = st.number_input(f"{col_name}", value=float(X[col_name].mean()))
+            
+            if st.button("Predict Custom Sample"):
+                sample_data = np.array([list(feature_inputs.values())])
+                sample_scaled = st.session_state['svm_scaler'].transform(sample_data)
+                
+                prediction = st.session_state['trained_svm'].predict(sample_scaled)[0]
+                
+                if st.session_state['is_classification']:
+                    st.info(f"Kết quả dự đoán phân lớp nhãn: **{prediction}**")
+                else:
+                    st.info(f"Kết quả dự đoán giá trị hồi quy: **{prediction:.4f}**")
+
+    with tab2:
+        st.header("📊 Trực quan hóa dữ liệu")
+        
+        st.subheader("1️⃣ Biểu đồ phân bổ thuộc tính Target")
+        if is_classification:
+            target_counts = y.value_counts()
+            fig1 = px.bar(x=target_counts.index, y=target_counts.values, color=target_counts.index, text=target_counts.values)
+            fig1.update_layout(xaxis_title="Class", yaxis_title="Số lượng mẫu")
+            st.plotly_chart(fig1, use_container_width=True)
+        else:
+            fig1 = px.histogram(df, x=target_col, nbins=30, marginal="box")
+            st.plotly_chart(fig1, use_container_width=True)
+
+        st.markdown("---")
+        st.subheader("2️⃣ Ma trận tương quan Features")
+        numeric_cols = df.select_dtypes(include=[np.number]).columns
+        if len(numeric_cols) > 1:
+            corr_matrix = df[numeric_cols].corr()
+            fig2, ax = plt.subplots(figsize=(10, 6))
+            sns.heatmap(corr_matrix, annot=True, cmap="RdBu_r", fmt=".2f", linewidths=0.5, ax=ax)
+            st.pyplot(fig2)
+        else:
+            st.warning("Không đủ thuộc tính số để vẽ ma trận tương quan.")
+
+    with tab3:
+        st.header("📋 Dataset Explorer")
+        
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Số lượng dòng (Samples)", df.shape[0])
+        c2.metric("Số lượng cột", df.shape[1])
+        c3.metric("Số lượng đặc trưng (Features)", X.shape[1])
+        
+        st.markdown("---")
+        st.subheader("📄 10 dòng đầu tiên của dữ liệu")
+        st.dataframe(df.head(10), use_container_width=True)
+        
+        st.markdown("---")
+        st.subheader("📈 Thống kê mô tả tổng quan")
+        st.dataframe(df.describe(), use_container_width=True)
+        
+        st.markdown("---")
+        st.subheader("🔍 Kiểm tra dữ liệu thiếu")
+        missing_data = pd.DataFrame({"Column": df.columns, "Missing Values": df.isnull().sum().values})
+        st.dataframe(missing_data, use_container_width=True)
+
+except FileNotFoundError:
+    st.error("❌ Không tìm thấy file 'breast_cancer.csv'. Vui lòng đảm bảo file CSV nằm cùng thư mục chạy ứng dụng Streamlit của bạn.")
