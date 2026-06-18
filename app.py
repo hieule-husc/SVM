@@ -174,97 +174,240 @@ tab1, tab2, tab3 = st.tabs(
 # =====================================================
 with tab1:
 
-    st.subheader("📥 Nhập thông tin bệnh nhân")
+    st.subheader("⚙️ Cấu hình và huấn luyện SVM")
 
-    col1, col2, col3 = st.columns(3)
+    st.markdown("""
+    Support Vector Machine (SVM) là thuật toán học máy dùng cho
+    các bài toán phân loại và hồi quy.
+
+    Người dùng có thể thay đổi các tham số để quan sát ảnh hưởng
+    đến hiệu năng mô hình.
+    """)
+
+    # ==========================
+    # CẤU HÌNH
+    # ==========================
+
+    col1, col2 = st.columns(2)
 
     with col1:
-        radius = st.number_input(
-            "Radius Mean",
-            value=float(df["mean radius"].mean())
+
+        kernel = st.selectbox(
+            "Kernel Function",
+            ["linear", "rbf", "poly", "sigmoid"]
         )
 
-        area = st.number_input(
-            "Area Mean",
-            value=float(df["mean area"].mean())
+        C = st.slider(
+            "Regularization Parameter (C)",
+            0.1,
+            100.0,
+            1.0
         )
 
     with col2:
-        texture = st.number_input(
-            "Texture Mean",
-            value=float(df["mean texture"].mean())
+
+        gamma = st.selectbox(
+            "Gamma",
+            ["scale", "auto"]
         )
 
-        smoothness = st.number_input(
-            "Smoothness Mean",
-            value=float(df["mean smoothness"].mean())
+        test_size = st.slider(
+            "Test Size",
+            0.1,
+            0.5,
+            0.2
         )
 
-    with col3:
-        perimeter = st.number_input(
-            "Perimeter Mean",
-            value=float(df["mean perimeter"].mean())
+    degree = 3
+
+    if kernel == "poly":
+
+        degree = st.slider(
+            "Polynomial Degree",
+            2,
+            10,
+            3
         )
 
-        compactness = st.number_input(
-            "Compactness Mean",
-            value=float(df["mean compactness"].mean())
-        )
-
-    st.info(
-        "Các thuộc tính còn lại được gán bằng giá trị trung bình của tập dữ liệu."
-    )
+    # ==========================
+    # TRAIN MODEL
+    # ==========================
 
     if st.button(
-        "🚀 Predict",
+        "🚀 Train Model",
         use_container_width=True
     ):
 
-        sample = X.mean().values
+        X_train, X_test, y_train, y_test = train_test_split(
+            X,
+            y,
+            test_size=test_size,
+            random_state=42
+        )
 
-        columns = list(X.columns)
+        scaler = StandardScaler()
 
-        sample[columns.index("mean radius")] = radius
-        sample[columns.index("mean texture")] = texture
-        sample[columns.index("mean perimeter")] = perimeter
-        sample[columns.index("mean area")] = area
-        sample[columns.index("mean smoothness")] = smoothness
-        sample[columns.index("mean compactness")] = compactness
+        X_train_scaled = scaler.fit_transform(
+            X_train
+        )
 
-        sample = sample.reshape(1, -1)
+        X_test_scaled = scaler.transform(
+            X_test
+        )
 
-        sample_scaled = scaler.transform(sample)
+        model = SVC(
+            kernel=kernel,
+            C=C,
+            gamma=gamma,
+            degree=degree,
+            probability=True
+        )
 
-        prediction = model.predict(
-            sample_scaled
-        )[0]
+        model.fit(
+            X_train_scaled,
+            y_train
+        )
 
-        probability = model.predict_proba(
-            sample_scaled
-        ).max()
+        y_pred = model.predict(
+            X_test_scaled
+        )
 
-        st.markdown("### 🎯 Kết quả dự đoán")
+        from sklearn.metrics import (
+            precision_score,
+            recall_score,
+            f1_score
+        )
 
-        if prediction == 1:
+        accuracy = accuracy_score(
+            y_test,
+            y_pred
+        )
 
-            st.success(
-                f"""
-                ✅ Benign (Lành tính)
+        precision = precision_score(
+            y_test,
+            y_pred
+        )
 
-                Độ tin cậy: {probability*100:.2f}%
-                """
+        recall = recall_score(
+            y_test,
+            y_pred
+        )
+
+        f1 = f1_score(
+            y_test,
+            y_pred
+        )
+
+        st.success("Huấn luyện thành công!")
+
+        m1, m2, m3, m4, m5 = st.columns(5)
+
+        m1.metric(
+            "Accuracy",
+            f"{accuracy*100:.2f}%"
+        )
+
+        m2.metric(
+            "Precision",
+            f"{precision*100:.2f}%"
+        )
+
+        m3.metric(
+            "Recall",
+            f"{recall*100:.2f}%"
+        )
+
+        m4.metric(
+            "F1 Score",
+            f"{f1*100:.2f}%"
+        )
+
+        m5.metric(
+            "Support Vectors",
+            int(sum(model.n_support_))
+        )
+
+        st.markdown("---")
+
+        st.subheader("📌 Thông tin mô hình")
+
+        st.write(f"Kernel: {kernel}")
+        st.write(f"C: {C}")
+        st.write(f"Gamma: {gamma}")
+        st.write(f"Support Vectors: {sum(model.n_support_)}")
+
+        st.markdown("---")
+
+        st.subheader("🎯 Demo dự đoán")
+
+        c1, c2, c3 = st.columns(3)
+
+        with c1:
+            radius = st.number_input(
+                "Radius Mean",
+                value=float(df["mean radius"].mean())
             )
 
-        else:
-
-            st.error(
-                f"""
-                ⚠️ Malignant (Ác tính)
-
-                Độ tin cậy: {probability*100:.2f}%
-                """
+        with c2:
+            texture = st.number_input(
+                "Texture Mean",
+                value=float(df["mean texture"].mean())
             )
 
+        with c3:
+            perimeter = st.number_input(
+                "Perimeter Mean",
+                value=float(df["mean perimeter"].mean())
+            )
+
+        if st.button(
+            "Predict Sample"
+        ):
+
+            sample = X.mean().values
+
+            cols = list(X.columns)
+
+            sample[
+                cols.index("mean radius")
+            ] = radius
+
+            sample[
+                cols.index("mean texture")
+            ] = texture
+
+            sample[
+                cols.index("mean perimeter")
+            ] = perimeter
+
+            sample = sample.reshape(
+                1,
+                -1
+            )
+
+            sample_scaled = scaler.transform(
+                sample
+            )
+
+            pred = model.predict(
+                sample_scaled
+            )[0]
+
+            prob = model.predict_proba(
+                sample_scaled
+            ).max()
+
+            if pred == 1:
+
+                st.success(
+                    f"✅ Benign ({prob*100:.2f}%)"
+                )
+
+            else:
+
+                st.error(
+                    f"⚠️ Malignant ({prob*100:.2f}%)"
+                )
 # =====================================================
 # TAB 2
 # =====================================================
