@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import plotly.express as px
 
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
@@ -10,20 +11,45 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 
-# ==========================
-# CẤU HÌNH TRANG
-# ==========================
+# =====================================================
+# CONFIG
+# =====================================================
 st.set_page_config(
     page_title="SVM Explorer",
     page_icon="🤖",
     layout="wide"
 )
 
-st.title("🤖 TÌM HIỂU THUẬT TOÁN SVM VÀ ỨNG DỤNG")
+# =====================================================
+# CSS
+# =====================================================
+st.markdown("""
+<style>
 
-# ==========================
+.main-title{
+    font-size:42px;
+    font-weight:bold;
+    text-align:center;
+    color:#2563eb;
+}
+
+.sub-title{
+    text-align:center;
+    color:#6b7280;
+    font-size:18px;
+    margin-bottom:25px;
+}
+
+.block-container{
+    padding-top:1rem;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# =====================================================
 # LOAD DATA
-# ==========================
+# =====================================================
 data = load_breast_cancer()
 
 df = pd.DataFrame(
@@ -33,9 +59,33 @@ df = pd.DataFrame(
 
 df["target"] = data.target
 
-# ==========================
+# =====================================================
+# SIDEBAR
+# =====================================================
+with st.sidebar:
+
+    st.title("⚙️ Model Settings")
+
+    kernel = st.selectbox(
+        "Kernel",
+        ["linear", "rbf", "poly", "sigmoid"]
+    )
+
+    st.markdown("---")
+
+    st.info("""
+    Support Vector Machine (SVM)
+
+    Ứng dụng:
+    • Phân loại dữ liệu
+    • Dự đoán bệnh
+    • Nhận diện mẫu
+    • Machine Learning
+    """)
+
+# =====================================================
 # TRAIN MODEL
-# ==========================
+# =====================================================
 X = df.drop("target", axis=1)
 y = df["target"]
 
@@ -52,193 +102,289 @@ X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
 model = SVC(
-    kernel="rbf",
+    kernel=kernel,
     probability=True
 )
 
-model.fit(X_train_scaled, y_train)
+model.fit(
+    X_train_scaled,
+    y_train
+)
 
-y_pred = model.predict(X_test_scaled)
+pred = model.predict(X_test_scaled)
 
-accuracy = accuracy_score(y_test, y_pred)
+accuracy = accuracy_score(
+    y_test,
+    pred
+)
 
-# ==========================
+# =====================================================
+# HEADER
+# =====================================================
+st.markdown("""
+<div class="main-title">
+🤖 SVM Explorer
+</div>
+
+<div class="sub-title">
+Breast Cancer Prediction using Support Vector Machine
+</div>
+""", unsafe_allow_html=True)
+
+# =====================================================
+# KPI DASHBOARD
+# =====================================================
+c1, c2, c3, c4 = st.columns(4)
+
+c1.metric(
+    "📊 Samples",
+    df.shape[0]
+)
+
+c2.metric(
+    "📋 Features",
+    X.shape[1]
+)
+
+c3.metric(
+    "🎯 Accuracy",
+    f"{accuracy*100:.2f}%"
+)
+
+c4.metric(
+    "🧠 Kernel",
+    kernel.upper()
+)
+
+st.markdown("---")
+
+# =====================================================
 # TABS
-# ==========================
-tab1, tab2, tab3 = st.tabs([
+# =====================================================
+tab1, tab2, tab3 = st.tabs(
+[
     "📥 Input dữ liệu",
     "📊 Trực quan hóa",
-    "📋 10 dòng dữ liệu đầu"
-])
+    "📋 Dataset"
+]
+)
 
 # =====================================================
 # TAB 1
 # =====================================================
 with tab1:
 
-    st.header("📥 Nhập dữ liệu để dự đoán")
+    st.subheader("📥 Nhập thông tin bệnh nhân")
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
-        radius_mean = st.number_input(
+        radius = st.number_input(
             "Radius Mean",
             value=float(df["mean radius"].mean())
         )
 
-        texture_mean = st.number_input(
-            "Texture Mean",
-            value=float(df["mean texture"].mean())
-        )
-
-        perimeter_mean = st.number_input(
-            "Perimeter Mean",
-            value=float(df["mean perimeter"].mean())
-        )
-
-    with col2:
-        area_mean = st.number_input(
+        area = st.number_input(
             "Area Mean",
             value=float(df["mean area"].mean())
         )
 
-        smoothness_mean = st.number_input(
+    with col2:
+        texture = st.number_input(
+            "Texture Mean",
+            value=float(df["mean texture"].mean())
+        )
+
+        smoothness = st.number_input(
             "Smoothness Mean",
             value=float(df["mean smoothness"].mean())
         )
 
-        compactness_mean = st.number_input(
+    with col3:
+        perimeter = st.number_input(
+            "Perimeter Mean",
+            value=float(df["mean perimeter"].mean())
+        )
+
+        compactness = st.number_input(
             "Compactness Mean",
             value=float(df["mean compactness"].mean())
         )
 
     st.info(
-        "Demo nhập 6 thuộc tính chính. "
-        "Các thuộc tính còn lại sẽ được gán giá trị trung bình."
+        "Các thuộc tính còn lại được gán bằng giá trị trung bình của tập dữ liệu."
     )
 
-    if st.button("🚀 Dự đoán"):
+    if st.button(
+        "🚀 Predict",
+        use_container_width=True
+    ):
 
         sample = X.mean().values
 
-        feature_names = list(X.columns)
+        columns = list(X.columns)
 
-        sample[feature_names.index("mean radius")] = radius_mean
-        sample[feature_names.index("mean texture")] = texture_mean
-        sample[feature_names.index("mean perimeter")] = perimeter_mean
-        sample[feature_names.index("mean area")] = area_mean
-        sample[feature_names.index("mean smoothness")] = smoothness_mean
-        sample[feature_names.index("mean compactness")] = compactness_mean
+        sample[columns.index("mean radius")] = radius
+        sample[columns.index("mean texture")] = texture
+        sample[columns.index("mean perimeter")] = perimeter
+        sample[columns.index("mean area")] = area
+        sample[columns.index("mean smoothness")] = smoothness
+        sample[columns.index("mean compactness")] = compactness
 
         sample = sample.reshape(1, -1)
 
         sample_scaled = scaler.transform(sample)
 
-        prediction = model.predict(sample_scaled)[0]
-        probability = model.predict_proba(sample_scaled).max()
+        prediction = model.predict(
+            sample_scaled
+        )[0]
 
-        st.subheader("Kết quả dự đoán")
+        probability = model.predict_proba(
+            sample_scaled
+        ).max()
+
+        st.markdown("### 🎯 Kết quả dự đoán")
 
         if prediction == 1:
-            st.success("✅ Khối u lành tính (Benign)")
+
+            st.success(
+                f"""
+                ✅ Benign (Lành tính)
+
+                Độ tin cậy: {probability*100:.2f}%
+                """
+            )
+
         else:
-            st.error("⚠️ Khối u ác tính (Malignant)")
 
-        st.write(f"Độ tin cậy: {probability*100:.2f}%")
+            st.error(
+                f"""
+                ⚠️ Malignant (Ác tính)
 
-        st.write(f"Độ chính xác mô hình: {accuracy*100:.2f}%")
+                Độ tin cậy: {probability*100:.2f}%
+                """
+            )
 
 # =====================================================
 # TAB 2
 # =====================================================
 with tab2:
 
-    st.header("📊 Trực quan hóa dữ liệu")
+    st.subheader("📊 Trực quan hóa dữ liệu")
 
-    # ===== 1 =====
-    st.subheader("1. Phân bố nhãn")
+    # 1
+    st.markdown("### 1. Class Distribution")
 
-    fig, ax = plt.subplots()
-
-    sns.countplot(
+    fig = px.histogram(
+        df,
         x="target",
-        data=df,
-        ax=ax
+        color="target"
     )
 
-    ax.set_title("Class Distribution")
-
-    st.pyplot(fig)
-
-    # ===== 2 =====
-    st.subheader("2. Histogram Mean Radius")
-
-    fig, ax = plt.subplots()
-
-    sns.histplot(
-        df["mean radius"],
-        kde=True,
-        ax=ax
+    st.plotly_chart(
+        fig,
+        use_container_width=True
     )
 
-    st.pyplot(fig)
+    # 2
+    st.markdown("### 2. Histogram - Mean Radius")
 
-    # ===== 3 =====
-    st.subheader("3. Boxplot Mean Texture")
-
-    fig, ax = plt.subplots()
-
-    sns.boxplot(
-        x=df["mean texture"],
-        ax=ax
+    fig = px.histogram(
+        df,
+        x="mean radius"
     )
 
-    st.pyplot(fig)
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
 
-    # ===== 4 =====
-    st.subheader("4. Correlation Heatmap")
+    # 3
+    st.markdown("### 3. Boxplot - Mean Texture")
 
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig = px.box(
+        df,
+        y="mean texture"
+    )
 
-    corr = df.corr()
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    # 4
+    st.markdown("### 4. Correlation Heatmap")
+
+    fig, ax = plt.subplots(
+        figsize=(12, 8)
+    )
 
     sns.heatmap(
-        corr,
+        df.corr(),
         cmap="coolwarm",
         ax=ax
     )
 
     st.pyplot(fig)
 
-    # ===== 5 =====
-    st.subheader("5. Scatter Plot")
+    # 5
+    st.markdown("### 5. Scatter Plot")
 
-    fig, ax = plt.subplots()
-
-    sns.scatterplot(
-        data=df,
+    fig = px.scatter(
+        df,
         x="mean radius",
         y="mean texture",
-        hue="target",
-        ax=ax
+        color="target"
     )
 
-    st.pyplot(fig)
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
 
 # =====================================================
 # TAB 3
 # =====================================================
 with tab3:
 
-    st.header("📋 10 dòng dữ liệu đầu tiên")
+    st.subheader("📋 10 dòng dữ liệu đầu tiên")
 
-    st.dataframe(df.head(10))
+    st.dataframe(
+        df.head(10),
+        use_container_width=True
+    )
 
-    st.subheader("Thông tin dữ liệu")
+    st.markdown("### 📈 Thống kê dữ liệu")
 
-    st.write(f"Số dòng: {df.shape[0]}")
-    st.write(f"Số cột: {df.shape[1]}")
+    st.dataframe(
+        df.describe(),
+        use_container_width=True
+    )
 
-    st.write("Thống kê mô tả:")
+    csv = df.to_csv(
+        index=False
+    )
 
-    st.dataframe(df.describe())
+    st.download_button(
+        "⬇ Download Dataset",
+        csv,
+        "breast_cancer_dataset.csv",
+        "text/csv"
+    )
+
+# =====================================================
+# FOOTER
+# =====================================================
+st.markdown("---")
+
+st.markdown("""
+<div style='text-align:center;color:gray;'>
+
+Support Vector Machine Project
+
+Nhập môn Khoa học dữ liệu
+
+Huế University
+
+</div>
+""", unsafe_allow_html=True)
