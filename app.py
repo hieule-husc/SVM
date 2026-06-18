@@ -241,7 +241,7 @@ try:
             points="all",
             notched=True,
             template="plotly_white",
-            color_discrete_sequence=px.colors.qualitative.Modern
+            color_discrete_sequence=px.colors.qualitative.Pastel
         )
         fig2.update_layout(margin=dict(l=20, r=20, t=20, b=20))
         st.plotly_chart(fig2, use_container_width=True)
