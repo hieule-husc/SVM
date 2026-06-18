@@ -17,23 +17,109 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-.block-container{padding-top:3.5rem;padding-bottom:1rem;max-width:1400px;}
-.header-container{padding:40px 30px;border-radius:20px;margin-top:15px;margin-bottom:25px;background:linear-gradient(135deg, rgba(37,99,235,0.12), rgba(59,130,246,0.03));border:1px solid rgba(128,128,128,0.15);}
-.header-title{text-align:center;font-size:40px;font-weight:800;margin-bottom:12px;color:inherit;line-height:1.2;}
-.header-subtitle{text-align:center;font-size:20px;font-weight:500;color:inherit;opacity:0.9;line-height:1.4;}
-div[data-testid="stMetric"]{background:rgba(128,128,128,0.05);border:1px solid rgba(128,128,128,0.15);border-radius:15px;padding:15px;box-shadow:0 2px 10px rgba(0,0,0,0.05);}
-div[data-testid="stMetric"]:hover{transform:translateY(-2px);transition:0.25s ease;}
-section[data-testid="stSidebar"]{border-right:1px solid rgba(128,128,128,0.15);}
-button[data-baseweb="tab"]{font-size:16px;font-weight:600;}
-button[data-baseweb="tab"][aria-selected="true"]{color:#2563EB;border-bottom:3px solid #2563EB;}
-.stButton > button{width:100%;border-radius:10px;height:45px;font-weight:600;}
-.stDownloadButton > button{width:100%;border-radius:10px;font-weight:600;}
-[data-testid="stDataFrame"]{border-radius:12px;}
-[data-testid="stSuccess"]{border-radius:12px;}
-[data-testid="stInfo"]{border-radius:12px;}
-[data-testid="stError"]{border-radius:12px;}
-::-webkit-scrollbar{width:10px;}
-::-webkit-scrollbar-thumb{background:#2563EB;border-radius:20px;}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+html, body, [data-testid="stAppViewContainer"] {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8fafc;
+}
+.block-container {
+    padding-top: 2.5rem;
+    padding-bottom: 2rem;
+    max-width: 1350px;
+}
+.header-container {
+    position: relative;
+    padding: 60px 40px;
+    border-radius: 24px;
+    margin-bottom: 35px;
+    background-image: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.75)), 
+                      url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80');
+    background-size: cover;
+    background-position: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+.header-title {
+    text-align: center;
+    font-size: 42px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    color: #ffffff;
+    letter-spacing: -0.025em;
+}
+.header-subtitle {
+    text-align: center;
+    font-size: 19px;
+    font-weight: 400;
+    color: #cbd5e1;
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+div[data-testid="stMetric"] {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+div[data-testid="stMetric"]:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.15);
+    border-color: #3b82f6;
+}
+section[data-testid="stSidebar"] {
+    background-color: #ffffff;
+    border-right: 1px solid #e2e8f0;
+}
+button[data-baseweb="tab"] {
+    font-size: 16px;
+    font-weight: 600;
+    color: #64748b;
+    padding-bottom: 8px;
+}
+button[data-baseweb="tab"][aria-selected="true"] {
+    color: #3b82f6 !important;
+    border-bottom: 3px solid #3b82f6 !important;
+}
+.stButton > button {
+    width: 100%;
+    border-radius: 12px;
+    height: 48px;
+    font-weight: 600;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    transition: all 0.2s ease;
+}
+.stButton > button:hover {
+    background-color: #2563eb;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+.stButton > button:active {
+    transform: scale(0.98);
+}
+[data-testid="stDataFrame"], [data-testid="stSubheader"] {
+    margin-top: 10px;
+}
+div.element-container stAlert {
+    border-radius: 14px;
+}
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 20px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -53,24 +139,26 @@ try:
         y = pd.factorize(y)[0]
 
     with st.sidebar:
-        st.title("⚙️ SVM Status")
+        st.title("⚙️ SVM Control Panel")
         st.success("Đã kết nối breast_cancer.csv")
-        st.metric("Tổng số mẫu", df.shape[0])
-        st.metric("Số đặc trưng đầu vào", X.shape[1])
+        st.markdown("---")
+        st.metric("Tổng mẫu lưu trữ (Samples)", f"{df.shape[0]:,}")
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.metric("Số đặc trưng lọc (Features)", X.shape[1])
 
     st.markdown(f"""
     <div class="header-container">
-        <div class="header-title">⚡ SVM Comprehensive Evaluation Studio</div>
-        <div class="header-subtitle">Hệ thống dự đoán ung thư vú bằng thuật toán Support Vector Machine (SVM)</div>
+        <div class="header-title">🧠 SVM Cancer Diagnosis Analyzer</div>
+        <div class="header-subtitle">Hệ thống phân tích chuyên sâu và hỗ trợ dự đoán ung thư vú áp dụng kiến trúc thuật toán máy học phân lớp tối ưu Support Vector Machine (SVM)</div>
     </div>
     """, unsafe_allow_html=True)
 
-    tab1, tab2, tab3 = st.tabs(["📥 Huấn luyện & Dự đoán", "📊 Trực quan hóa", "📋 Xem Dataset"])
+    tab1, tab2, tab3 = st.tabs(["📥 Huấn luyện & Dự đoán", "📊 Trực quan hóa dữ liệu", "📋 Thống kê Dataset"])
 
     with tab1:
-        st.subheader("🚀 Khởi chạy mô hình học máy SVM")
+        st.subheader("🚀 Tiến trình phân tích & Huấn luyện")
         
-        if st.button("Chạy huấn luyện hệ thống SVM", use_container_width=True):
+        if st.button("Khai hỏa quy trình huấn luyện SVM Pipeline", use_container_width=True):
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
             
             scaler = StandardScaler()
@@ -83,19 +171,19 @@ try:
             train_pred = model.predict(X_train_scaled)
             test_pred = model.predict(X_test_scaled)
             
-            st.success("Hệ thống SVM đã phân tích xong dữ liệu từ breast_cancer.csv!")
+            st.success("Hệ thống mạng học máy SVM đã tối ưu và hội tụ thành công!")
             
             m1, m2, m3 = st.columns(3)
-            m1.metric("Accuracy (Train / Test)", f"{accuracy_score(y_train, train_pred)*100:.2f}% / {accuracy_score(y_test, test_pred)*100:.2f}%")
-            m2.metric("R² Score (Train / Test)", f"{r2_score(y_train, train_pred):.4f} / {r2_score(y_test, test_pred):.4f}")
-            m3.metric("MAE (Train / Test)", f"{mean_absolute_error(y_train, train_pred):.4f} / {mean_absolute_error(y_test, test_pred):.4f}")
+            m1.metric("Mức chính xác (Accuracy Train / Test)", f"{accuracy_score(y_train, train_pred)*100:.2f}% / {accuracy_score(y_test, test_pred)*100:.2f}%")
+            m2.metric("Hệ số xác định (R² Train / Test)", f"{r2_score(y_train, train_pred):.4f} / {r2_score(y_test, test_pred):.4f}")
+            m3.metric("Sai số tuyệt đối (MAE Train / Test)", f"{mean_absolute_error(y_train, train_pred):.4f} / {mean_absolute_error(y_test, test_pred):.4f}")
 
             st.session_state['trained_svm'] = model
             st.session_state['svm_scaler'] = scaler
 
         if 'trained_svm' in st.session_state:
-            st.markdown("---")
-            st.subheader("🎯 Nhập thông số mẫu mới để kiểm tra dự đoán")
+            st.markdown("<br><hr>", unsafe_allow_html=True)
+            st.subheader("🎯 Cửa sổ dự nghiệm mẫu bệnh án mới")
             
             feature_inputs = {}
             cols = st.columns(min(4, len(X.columns)))
@@ -107,7 +195,7 @@ try:
                     )
             
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("Thể hiện kết quả dự đoán của mẫu", use_container_width=True):
+            if st.button("Tính toán & Xuất kết quả dự đoán lâm sàng", use_container_width=True):
                 sample_data = np.array([list(feature_inputs.values())])
                 sample_scaled = st.session_state['svm_scaler'].transform(sample_data)
                 
@@ -118,15 +206,16 @@ try:
                 label_mapping = {0: "Mác ác tính (M)", 1: "Lành tính (B)"} if df[target_col].iloc[0] == 'M' else {0: "Lành tính (B)", 1: "Mác ác tính (M)"}
                 pred_label = label_mapping.get(prediction, f"Nhãn {prediction}")
                 
-                st.info(f"Kết quả dự đoán phân lớp từ SVM: **{pred_label}** (Độ tin cậy: {max_prob*100:.2f}%)")
+                st.info(f"Kết quả nhận diện tự động từ bộ phân lớp SVM: **{pred_label}** — Xác suất tin cậy cấu trúc: **{max_prob*100:.2f}%**")
 
     with tab2:
-        st.header("📊 Hệ thống 5 Biểu đồ Trực quan hóa Đa phong cách")
+        st.subheader("📊 Hệ thống 5 Biểu đồ Khai phá Đa góc nhìn")
         
         numeric_cols = X.select_dtypes(include=[np.number]).columns.tolist()
         df_vis = df.copy()
         df_vis[target_col] = y
         
+        st.markdown("<br>", unsafe_allow_html=True)
         st.subheader("1️⃣ Phong cách Tần suất (Histogram) - Phân phối thuộc tính đầu vào")
         selected_hist_col = st.selectbox("Chọn thuộc tính cần xem phân phối:", numeric_cols, index=0)
         fig1 = px.histogram(
@@ -135,9 +224,10 @@ try:
             color=target_col,
             marginal="rug",
             barmode="overlay",
-            title=f"Biểu đồ phân phối tần suất của {selected_hist_col} phân tách theo nhãn target",
-            template="plotly_white"
+            template="plotly_white",
+            color_discrete_sequence=px.colors.qualitative.Safe
         )
+        fig1.update_layout(margin=dict(l=20, r=20, t=20, b=20))
         st.plotly_chart(fig1, use_container_width=True)
         st.markdown("---")
 
@@ -150,27 +240,28 @@ try:
             color=target_col,
             points="all",
             notched=True,
-            title=f"Biểu đồ hộp phân tích độ phân tán và ngoại lai của {selected_box_col} qua từng nhóm nhãn",
-            template="seaborn"
+            template="plotly_white",
+            color_discrete_sequence=px.colors.qualitative.Modern
         )
+        fig2.update_layout(margin=dict(l=20, r=20, t=20, b=20))
         st.plotly_chart(fig2, use_container_width=True)
         st.markdown("---")
 
         st.subheader("3️⃣ Phong cách Ma trận Mật độ (Heatmap) - Đo lường độ tương quan tuyến tính")
         if len(numeric_cols) > 1:
             corr_matrix = df_vis[numeric_cols + [target_col]].corr()
-            fig3, ax = plt.subplots(figsize=(12, 8))
+            fig3, ax = plt.subplots(figsize=(12, 7))
             sns.heatmap(
                 corr_matrix, 
                 annot=True, 
-                cmap="coolwarm", 
+                cmap="YlGnBu", 
                 fmt=".2f", 
-                linewidths=1, 
-                linecolor="white",
+                linewidths=0.8, 
+                linecolor="#f8fafc",
                 cbar=True,
                 ax=ax
             )
-            plt.title("Ma trận biểu diễn trọng số tương quan (Correlation Matrix) giữa các đặc trưng", fontsize=14, pad=15)
+            ax.set_title("Ma trận biểu diễn trọng số tương quan giữa các biến hệ thống", fontsize=13, pad=12, weight='bold')
             st.pyplot(fig3)
         else:
             st.warning("Không đủ số lượng cột dữ liệu số để thiết lập biểu đồ ma trận tương quan.")
@@ -185,9 +276,10 @@ try:
                 x=scat_col1, 
                 y=scat_col2, 
                 color=target_col,
-                title=f"Không gian phân tách dữ liệu thực tế giữa {scat_col1} và {scat_col2}",
-                template="plotly_dark"
+                template="plotly_white",
+                color_discrete_sequence=px.colors.qualitative.Bold
             )
+            fig4.update_layout(margin=dict(l=20, r=20, t=20, b=20))
             st.plotly_chart(fig4, use_container_width=True)
         else:
             st.warning("Cần tối thiểu 2 trường dữ liệu số để thiết lập biểu đồ phân tách không gian.")
@@ -200,27 +292,28 @@ try:
             target_counts, 
             values='Số lượng mẫu', 
             names='Nhãn lớp', 
-            hole=0.4,
-            color='Nhãn lớp',
-            title="Tỉ lệ phần trăm cấu trúc số lượng các lớp trong bài toán phân loại nhãn mục tiêu",
-            template="ggplot2"
+            hole=0.45,
+            template="plotly_white",
+            color_discrete_sequence=["#3b82f6", "#ef4444"]
         )
-        fig5.update_traces(textinfo='percent+label', pull=[0.05] * len(target_counts))
+        fig5.update_traces(textinfo='percent+label', pull=[0.02] * len(target_counts))
+        fig5.update_layout(margin=dict(l=20, r=20, t=20, b=20))
         st.plotly_chart(fig5, use_container_width=True)
 
     with tab3:
-        st.header("📋 Dataset Explorer")
-        st.subheader("📄 10 dòng đầu tiên của file breast_cancer.csv")
+        st.subheader("📋 Phân tích dữ liệu gốc")
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.write("📊 **10 bản ghi dữ liệu lâm sàng đầu tiên:**")
         st.dataframe(df.head(10), use_container_width=True)
         
-        st.markdown("---")
-        st.subheader("📈 Thống kê mô tả tổng quan")
+        st.markdown("<br><hr>", unsafe_allow_html=True)
+        st.write("📈 **Bảng thống kê thuộc tính phân phối mô tả:**")
         st.dataframe(df.describe(), use_container_width=True)
         
-        st.markdown("---")
-        st.subheader("🔍 Kiểm tra các giá trị trống (Missing Values)")
-        missing_data = pd.DataFrame({"Trường dữ liệu": df.columns, "Số lượng ô trống": df.isnull().sum().values})
+        st.markdown("<br><hr>", unsafe_allow_html=True)
+        st.write("🔍 **Báo cáo mật độ dữ liệu khuyết thiếu (Missing Values):**")
+        missing_data = pd.DataFrame({"Trường thuộc tính số": df.columns, "Số ô trống": df.isnull().sum().values})
         st.dataframe(missing_data, use_container_width=True)
 
 except FileNotFoundError:
-    st.error("❌ Không tìm thấy file 'breast_cancer.csv'. Vui lòng đặt file dữ liệu này nằm cùng cấp với file chạy ứng dụng Streamlit.")
+    st.error("❌ Hệ thống không tìm thấy tập tin 'breast_cancer.csv'. Vui lòng kiểm tra lại đường dẫn lưu trữ thư mục gốc.")
