@@ -61,7 +61,7 @@ try:
     st.markdown(f"""
     <div class="header-container">
         <div class="header-title">⚡ SVM Comprehensive Evaluation Studio</div>
-        <div class="header-subtitle">Hệ thống tối ưu hóa và đánh giá hiệu năng thuật toán Support Vector Machine (SVM)</div>
+        <div class="header-subtitle">Hệ thống dự đoán ung thư vú bằng thuật toán Support Vector Machine (SVM)</div>
     </div>
     """, unsafe_allow_html=True)
 
